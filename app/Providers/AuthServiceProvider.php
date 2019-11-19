@@ -8,9 +8,8 @@ use App\User;
 use App\Post;
 use App\Permission;
 
+class AuthServiceProvider extends ServiceProvider {
 
-class AuthServiceProvider extends ServiceProvider
-{
     /**
      * The policy mappings for the application.
      *
@@ -26,21 +25,26 @@ class AuthServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot()
-    {
+    public function boot() {
         $this->registerPolicies();
-        
+
 //         Gate::define('update-post', function($user, Post $post) { //pega o usuário logado automaticamente
 //            return $user->id == $post->user_id;
 //        });
         $permissions = Permission::with('roles')->get();
 //        dd($permissions);
-        
-        foreach($permissions as $permission){
-               Gate::define($permission->name, function($user) use ($permission) {
-            return $user->hasPermission($permission);
+
+        foreach ($permissions as $permission) {
+            Gate::define($permission->name, function($user) use ($permission) {
+                return $user->hasPermission($permission);
             });
         }
-        
+        //ability: add_post, edit post, etc.
+        Gate::before(function(User $user, $ability) {
+            if ($user->hasAnyRoles('adm')) {
+                return true;
+            }
+        });
     }
+
 }
